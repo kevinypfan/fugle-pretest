@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
+import fetch from 'node-fetch';
 
 @Controller()
 export class AppController {
@@ -8,5 +9,12 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Get('/data')
+  async getData(@Query('user') userId): Promise<object> {
+    console.log(userId);
+    const result = await this.appService.getData();
+    return { result };
   }
 }
