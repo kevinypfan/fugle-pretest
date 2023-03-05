@@ -1,10 +1,13 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
-import fetch from 'node-fetch';
-
+import { RateLimitGuard } from './rate-limit.guard';
+import { RedisService } from './redis.service';
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly redisService: RedisService,
+  ) {}
 
   @Get()
   getHello(): string {
@@ -12,6 +15,7 @@ export class AppController {
   }
 
   @Get('/data')
+  @UseGuards(RateLimitGuard)
   async getData(@Query('user') userId): Promise<object> {
     console.log(userId);
     const result = await this.appService.getData();
