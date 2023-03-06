@@ -1,10 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis, Redis } from '@nestjs-modules/ioredis';
 import { ITrade } from '../app.interface';
+import { CHANNELS } from './steam.constants';
 
 @Injectable()
 export class TradeService {
-  constructor(@InjectRedis() private readonly redis: Redis) {}
+  private readonly logger = new Logger(TradeService.name);
+
+  constructor(@InjectRedis() private readonly redis: Redis) {
+    setInterval(() => {
+      this.logTrades();
+    }, 30000);
+  }
+
+  async logTrades() {
+    const results = await Promise.all(
+      CHANNELS.map((channel) => this.getTrades(channel)),
+    );
+    const pureResults = CHANNELS.map((channel, index) => ({
+      currencyPair: channel,
+      data: results[index],
+    })).filter((result) => result.data.length > 0);
+
+    this.logger.log(pureResults);
+  }
 
   async getTrades(currencyPair: string): Promise<ITrade[]> {
     const keys = await this.redis.keys(`trade:${currencyPair}:*`);

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as WebSocket from 'ws';
 import { timer } from 'rxjs';
 import { InjectRedis, Redis } from '@nestjs-modules/ioredis';
@@ -8,9 +8,44 @@ import { Server } from 'ws';
 
 @Injectable()
 export class StreamService {
+  private readonly logger = new Logger(StreamService.name);
+
   constructor(@InjectRedis() private readonly redis: Redis) {
     CHANNELS.forEach((channel) => (this.subMap[channel] = []));
     this.connect();
+    setInterval(() => {
+      this.logClients();
+    }, 20000);
+  }
+
+  logClients() {
+    const { subMap, subCounter, clients } = this;
+    const subMapLens = {};
+    const subCounterSizes = {};
+    const subCounterMap = {};
+    Object.keys(subMap).forEach((key) => {
+      subMapLens[key] = subMap[key].length;
+    });
+    Object.keys(subMapLens).forEach((key) => {
+      if (subMapLens[key] === 0) delete subMapLens[key];
+    });
+
+    Object.keys(subCounter).forEach((key) => {
+      subCounterSizes[key] = subCounter[key].size;
+      subCounterMap[key] = Array.from(subCounter[key]);
+    });
+
+    Object.keys(subCounter).forEach((key) => {
+      if (subCounterSizes[key] === 0) delete subCounterSizes[key];
+      subCounterMap[key] = Array.from(subCounter[key]);
+    });
+
+    this.logger.log({
+      subMapLens,
+      subCounterMap,
+      subCounterSizes,
+      clientsLen: clients.length,
+    });
   }
 
   subMap = {};

@@ -90,34 +90,6 @@ export class StreamGateway {
     };
   }
 
-  //   @SubscribeMessage('bts:print')
-  //   async print(client: any, data: any): Promise<ICargo<any>> {
-  //     const { subMap, subCounter, clients } = this.streamService;
-  //     const subMapLens = {};
-  //     const subCounterSizes = {};
-  //     const subCounterMap = {};
-
-  //     Object.keys(subMap).forEach((key) => {
-  //       subMapLens[key] = subMap[key].length;
-  //     });
-
-  //     Object.keys(subCounter).forEach((key) => {
-  //       subCounterSizes[key] = subCounter[key].size;
-  //       subCounterMap[key] = Array.from(subCounter[key]);
-  //     });
-
-  //     return {
-  //       event: 'bts:print',
-  //       currencyPairs: [],
-  //       data: {
-  //         subMapLens,
-  //         subCounterMap,
-  //         subCounterSizes,
-  //         clientsLen: clients.length,
-  //       },
-  //     };
-  //   }
-
   @SubscribeMessage('bts:subscribe')
   subscribe(client: any, data: any): ICargo<ITrade> {
     const copySet = new Set([
