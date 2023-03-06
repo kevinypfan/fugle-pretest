@@ -5,14 +5,13 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { RedisService } from './redis.service';
 import { v4 as uuid } from 'uuid';
-
+import { InjectRedis, Redis } from '@nestjs-modules/ioredis';
 // import { Observable } from 'rxjs';
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(@InjectRedis() private readonly redis: Redis) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { RL_TTL, RL_LIMIT_ID, RL_LIMIT_IP } = process.env;
@@ -39,7 +38,7 @@ export class RateLimitGuard implements CanActivate {
   async rlCheck({ key, ttl = 60 }: { key: string; ttl?: number }) {
     const now = Date.now();
     const clearBefore = now - ttl * 1000;
-    const batch = this.redisService.client.multi();
+    const batch = this.redis.multi();
     batch.zremrangebyscore(`rl:${key}`, 0, clearBefore);
     batch.zadd(`rl:${key}`, String(now), uuid());
     batch.zrange(`rl:${key}`, 0, -1, 'WITHSCORES');
