@@ -45,6 +45,34 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Test with command line
+
+RESTful api
+
+```bash
+# part 1 and part 2 test
+curl --location --request GET 'https://pretest.kevinfan.me/fugle/data?user=id'
+```
+
+WebSocket
+
+```bash
+# part 3
+
+npm install -g wscat
+
+wscat --connect wss://pretest.kevinfan.me/fugle/streaming
+
+# subscribe 8 currency pairs
+{"event":"bts:subscribe","data":{"currencyPairs":["btcusd","btcpax","gbpusd","gbpeur","eurusd","xrpusd","xrpeur","xrpbtc"]}}
+
+# unsubscribe 2 currency pairs
+{"event":"bts:subscribe","data":{"currencyPairs":["gbpusd","gbpeur"]}}
+
+# get 1 minute OHLC
+{"event":"bts:OHLC","data":{"currencyPairs":["btcusd"]}}
+```
+
 ## Test
 
 ```bash
