@@ -12,7 +12,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
     StreamModule,
     RedisModule.forRoot({
       config: {
-        url: 'redis://localhost:6379',
+        url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
       },
     }),
   ],
