@@ -14,6 +14,7 @@ export class StreamService {
   }
 
   subMap = {};
+  subCounter: { [key: string]: Set<string> } = {};
   clients = [];
 
   client: WebSocket;

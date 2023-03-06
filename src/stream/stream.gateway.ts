@@ -12,10 +12,7 @@ import { Server } from 'ws';
 import { StreamService } from './stream.service';
 import { v4 as uuid } from 'uuid';
 import { TradeService } from 'src/stream/trade.service';
-
-interface ICpToClientMap {
-  [key: string]: any[];
-}
+import { CHANNELS } from './steam.constants';
 
 @WebSocketGateway({ path: '/streaming' })
 export class StreamGateway {
@@ -33,6 +30,7 @@ export class StreamGateway {
 
   handleConnection(client, req) {
     client.uuid = uuid();
+    this.streamService.subCounter[client.uuid] = new Set();
     this.streamService.clients.push(client);
 
     // const userID = req.headers['sec-websocket-key'];
@@ -43,12 +41,24 @@ export class StreamGateway {
   }
 
   handleDisconnect(client) {
+    delete this.streamService.subCounter[client.uuid];
     for (let i = 0; i < this.streamService.clients.length; i++) {
       if (this.streamService.clients[i] === client) {
         this.streamService.clients.splice(i, 1);
         break;
       }
     }
+
+    CHANNELS.forEach((currencyPair) => {
+      const clients = this.streamService.subMap[currencyPair];
+
+      for (let i = 0; i < clients.length; i++) {
+        if (clients[i] === client) {
+          clients.splice(i, 1);
+          break;
+        }
+      }
+    });
     // this.broadcast('disconnect',{});
   }
 
@@ -60,10 +70,10 @@ export class StreamGateway {
   }
 
   @SubscribeMessage('bts:OHLC')
-  async test(client: any, data: any): Promise<ICargo<any>> {
+  async getOHLC(client: any, data: any): Promise<ICargo<any>> {
     const reuslt = data.currencyPairs.map(async (currencyPair) => {
       //   this.streamService.subscribeTrade(currencyPair);
-      console.log(currencyPair);
+      //   console.log(currencyPair);
 
       const data = {
         ...(await this.tradeService.getOpenCloseTrade(currencyPair)),
@@ -80,10 +90,54 @@ export class StreamGateway {
     };
   }
 
+  //   @SubscribeMessage('bts:print')
+  //   async print(client: any, data: any): Promise<ICargo<any>> {
+  //     const { subMap, subCounter, clients } = this.streamService;
+  //     const subMapLens = {};
+  //     const subCounterSizes = {};
+  //     const subCounterMap = {};
+
+  //     Object.keys(subMap).forEach((key) => {
+  //       subMapLens[key] = subMap[key].length;
+  //     });
+
+  //     Object.keys(subCounter).forEach((key) => {
+  //       subCounterSizes[key] = subCounter[key].size;
+  //       subCounterMap[key] = Array.from(subCounter[key]);
+  //     });
+
+  //     return {
+  //       event: 'bts:print',
+  //       currencyPairs: [],
+  //       data: {
+  //         subMapLens,
+  //         subCounterMap,
+  //         subCounterSizes,
+  //         clientsLen: clients.length,
+  //       },
+  //     };
+  //   }
+
   @SubscribeMessage('bts:subscribe')
   subscribe(client: any, data: any): ICargo<ITrade> {
+    const copySet = new Set([
+      ...Array.from(this.streamService.subCounter[client.uuid]),
+      ...data.currencyPairs,
+    ]);
+
+    // console.log(copySet.size);
+    if (copySet.size > 10)
+      return {
+        event: 'bts:subscription_failded',
+        currencyPairs: data.currencyPairs,
+        data: null,
+      };
+
     data.currencyPairs.forEach((currencyPair) => {
-      this.streamService.subMap[currencyPair].push(client);
+      if (this.streamService.subMap[currencyPair].indexOf(client) < 0) {
+        this.streamService.subMap[currencyPair].push(client);
+        this.streamService.subCounter[client.uuid].add(currencyPair);
+      }
     });
 
     return {
@@ -101,6 +155,7 @@ export class StreamGateway {
       for (let i = 0; i < clients.length; i++) {
         if (clients[i] === client) {
           clients.splice(i, 1);
+          this.streamService.subCounter[client.uuid].delete(currencyPair);
           break;
         }
       }
