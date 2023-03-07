@@ -51,7 +51,7 @@ RESTful api
 
 ```bash
 # part 1 and part 2 test
-curl --location --request GET 'https://pretest.kevinfan.me/fugle/data?user=id'
+curl --location --request GET 'http://pretest.kevinfan.me/fugle/data?user=id'
 ```
 
 WebSocket
@@ -61,7 +61,7 @@ WebSocket
 
 npm install -g wscat
 
-wscat --connect wss://pretest.kevinfan.me/fugle/streaming
+wscat --connect ws://pretest.kevinfan.me/fugle/streaming
 
 # subscribe 8 currency pairs
 {"event":"bts:subscribe","data":{"currencyPairs":["btcusd","btcpax","gbpusd","gbpeur","eurusd","xrpusd","xrpeur","xrpbtc"]}}
