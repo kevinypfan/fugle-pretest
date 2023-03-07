@@ -134,7 +134,10 @@ export class StreamGateway {
       };
 
     data.currencyPairs.forEach((currencyPair) => {
-      if (this.streamService.subMap[currencyPair].indexOf(client) < 0) {
+      if (
+        this.streamService.subMap[currencyPair] &&
+        this.streamService.subMap[currencyPair].indexOf(client) < 0
+      ) {
         this.streamService.subMap[currencyPair].push(client);
         this.streamService.subCounter[client.uuid].add(currencyPair);
       }
@@ -142,27 +145,30 @@ export class StreamGateway {
 
     return {
       event: 'bts:subscription_succeeded',
-      currencyPairs: data.currencyPairs,
+      currencyPairs: Array.from(this.streamService.subCounter[client.uuid]),
       data: null,
     };
   }
 
   @SubscribeMessage('bts:unsubscribe')
   async unsubscribe(client: any, data: any): Promise<ICargo<ITrade>> {
+    const unsubCurrencyPairs = [];
     data.currencyPairs.forEach((currencyPair) => {
       const clients = this.streamService.subMap[currencyPair];
 
       for (let i = 0; i < clients.length; i++) {
         if (clients[i] === client) {
           clients.splice(i, 1);
-          this.streamService.subCounter[client.uuid].delete(currencyPair);
+          const isDeleted =
+            this.streamService.subCounter[client.uuid].delete(currencyPair);
+          if (isDeleted) unsubCurrencyPairs.push(currencyPair);
           break;
         }
       }
     });
     return {
       event: 'bts:unsubscription_succeeded',
-      currencyPairs: data.currencyPairs,
+      currencyPairs: unsubCurrencyPairs,
       data: null,
     };
   }
