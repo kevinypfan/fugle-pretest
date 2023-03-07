@@ -1,13 +1,9 @@
 import {
-  MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsResponse,
 } from '@nestjs/websockets';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ICargo, IMessage, ITrade } from 'src/app.interface';
+import { ICargo, ITrade } from 'src/app.interface';
 import { Server } from 'ws';
 import { StreamService } from './stream.service';
 import { v4 as uuid } from 'uuid';
@@ -72,9 +68,6 @@ export class StreamGateway {
   @SubscribeMessage('bts:OHLC')
   async getOHLC(client: any, data: any): Promise<ICargo<any>> {
     const reuslt = data.currencyPairs.map(async (currencyPair) => {
-      //   this.streamService.subscribeTrade(currencyPair);
-      //   console.log(currencyPair);
-
       const data = {
         ...(await this.tradeService.getOpenCloseTrade(currencyPair)),
         ...(await this.tradeService.getHighLowTrade(currencyPair)),
@@ -89,34 +82,6 @@ export class StreamGateway {
       data: await Promise.all(reuslt),
     };
   }
-
-  //   @SubscribeMessage('bts:print')
-  //   async print(client: any, data: any): Promise<ICargo<any>> {
-  //     const { subMap, subCounter, clients } = this.streamService;
-  //     const subMapLens = {};
-  //     const subCounterSizes = {};
-  //     const subCounterMap = {};
-
-  //     Object.keys(subMap).forEach((key) => {
-  //       subMapLens[key] = subMap[key].length;
-  //     });
-
-  //     Object.keys(subCounter).forEach((key) => {
-  //       subCounterSizes[key] = subCounter[key].size;
-  //       subCounterMap[key] = Array.from(subCounter[key]);
-  //     });
-
-  //     return {
-  //       event: 'bts:print',
-  //       currencyPairs: [],
-  //       data: {
-  //         subMapLens,
-  //         subCounterMap,
-  //         subCounterSizes,
-  //         clientsLen: clients.length,
-  //       },
-  //     };
-  //   }
 
   @SubscribeMessage('bts:subscribe')
   subscribe(client: any, data: any): ICargo<ITrade> {

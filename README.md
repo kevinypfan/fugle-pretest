@@ -45,6 +45,12 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Running with docker
+
+```bash
+docker compose up -d
+```
+
 ## Test with command line
 
 RESTful api
