@@ -23,8 +23,6 @@ export class StreamService {
   isConnect = false;
 
   connect() {
-    // this.redis.set('test', 'qwe');
-    // this.redis.expire('test', 40);
     this.client = new WebSocket('wss://ws.bitstamp.net');
     this.client.on('open', () => {
       console.log('connected!');
@@ -45,7 +43,6 @@ export class StreamService {
     });
 
     this.client.on('message', (message) => {
-      //handler
       const msg: IMessage = JSON.parse(message.toString());
       if (msg.event === 'trade') {
         const currencyPair = msg.channel.substring(12);

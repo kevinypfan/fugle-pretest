@@ -8,7 +8,6 @@ export class TradeService {
 
   async getTrades(currencyPair: string): Promise<ITrade[]> {
     const keys = await this.redis.keys(`trade:${currencyPair}:*`);
-    // console.log(keys);
     if (keys.length < 1) return [];
     const data = await this.redis.mget(keys);
 
@@ -20,10 +19,6 @@ export class TradeService {
   ): Promise<{ O: ITrade; C: ITrade }> {
     const trades = await this.getTrades(currencyPair);
     trades.sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
-    // console.log({
-    //   trades: trades.map((trade) => trade.timestamp),
-    // });
-
     return {
       O: trades[0] || null,
       C: trades[trades.length - 1] || null,
@@ -34,9 +29,12 @@ export class TradeService {
     currencyPair: string,
   ): Promise<{ H: ITrade; L: ITrade }> {
     const trades = await this.getTrades(currencyPair);
-    trades.sort((a, b) => a.price - b.price);
+    trades.sort((a, b) => a.price / a.amount - b.price / b.amount);
     // console.log({
-    //   trades: trades.map((trade) => trade.price),
+    //   HighLow: trades.map((trade) => ({
+    //     ...trade,
+    //     perPrice: trade.price / trade.amount,
+    //   })),
     // });
     return { H: trades[trades.length - 1] || null, L: trades[0] || null };
   }

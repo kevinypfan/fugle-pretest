@@ -34,6 +34,7 @@ export class AppController {
     const data = {
       ...(await this.tradeService.getOpenCloseTrade(currencyPair)),
       ...(await this.tradeService.getHighLowTrade(currencyPair)),
+      all: await this.tradeService.getTrades(currencyPair),
     };
     return data;
   }
